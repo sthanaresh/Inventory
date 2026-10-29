@@ -176,3 +176,39 @@ def delete_category(category_id: int):
     connection.close()
 
 # Implementing products
+
+@app.post("/products/create", status_code=status.HTTP_201_CREATED)
+def create_products(product_name: ProductsDetails):
+    if (not product_name.name.strip()
+            or not product_name.category.strip()
+            or product_name.price is None
+            or product_name.stock_quantity is None
+            or product_name.stock_quantity < 0
+            or product_name.price < 0):
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Product details are required"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    SELECT *
+    FROM Category
+    WHERE name =?
+    """, (product_name.category, ))
+    category_found = cursor.fetchone()
+    if not category_found:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Category does not exist"
+
+        )
+    cursor.execute("""
+    INSERT INTO Products (Category, Stock_Quantity, Price, Name)
+                     VALUES (?, ?, ?, ?)""",
+                   (product_name.category,
+                    product_name.stock_quantity,
+                    product_name.price,
+                    product_name.name))
+    connection.commit()
+    connection.close()
