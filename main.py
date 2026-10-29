@@ -155,7 +155,7 @@ def update_category(category_id: int, category_name: str = Body(...)):
     connection.close()
     return updated_category
 
-@app.delete("/categories/{category_id}")
+@app.delete("/categories/{category_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_category(category_id: int):
     if category_id<1:
         raise HTTPException(
@@ -169,5 +169,4 @@ def delete_category(category_id: int):
     """,(category_id,))
     connection.commit()
     connection.close()
-    return {"message": "Category deleted successfully",
-            "Category ID":category_id}
+    return None
