@@ -31,6 +31,12 @@ class CategoriesDetails(BaseModel):
     name: str = Field(min_length=1)
     id: int
 
+class ProductsDetails(BaseModel):
+    name: str = Field(min_length=1)
+    id:int
+    price: float
+    stock_quantity: int
+    category: str=Field(min_length=1)
 
 def create_database():
     connection = get_db_connection()
