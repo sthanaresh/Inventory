@@ -47,7 +47,7 @@ def create_database():
             Name TEXT NOT NULL,
             Price NUMERIC NOT NULL,
             Stock_Quantity INTEGER NOT NULL DEFAULT 0,
-            Category_ID INTEGER NOT NULL)
+            Category TEXT NOT NULL)
     """)
     connection.commit()
     print("Database connected successfully")
