@@ -175,3 +175,4 @@ def delete_category(category_id: int):
     connection.commit()
     connection.close()
 
+# Implementing products
