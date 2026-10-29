@@ -153,7 +153,6 @@ def update_category(category_id: int, category_name: str = Body(...)):
     print(update_category)
     connection.commit()
     connection.close()
-    return updated_category
 
 @app.delete("/categories/{category_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_category(category_id: int):
