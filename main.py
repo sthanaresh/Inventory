@@ -168,4 +168,4 @@ def delete_category(category_id: int):
     """,(category_id,))
     connection.commit()
     connection.close()
-    return None
+
