@@ -123,7 +123,7 @@ def getCategory_by_id(category_id: int):
     connection.close()
     return category
 
-@app.put("/categories/{category_id}")
+@app.put("/categories/{category_id}",status_code=status.HTTP_200_OK)
 def update_category(category_id: int, category_name: str = Body(...)):
     print(f"User input:{category_name}")
     if category_id<1:
