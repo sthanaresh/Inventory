@@ -154,3 +154,20 @@ def update_category(category_id: int, category_name: str = Body(...)):
     connection.commit()
     connection.close()
     return updated_category
+
+@app.delete("/categories/{category_id}")
+def delete_category(category_id: int):
+    if category_id<1:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Category id is not valid"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    delete from Category where id = ?
+    """,(category_id,))
+    connection.commit()
+    connection.close()
+    return {"message": "Category deleted successfully",
+            "Category ID":category_id}
