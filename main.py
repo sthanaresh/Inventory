@@ -250,3 +250,20 @@ def update_products(product_id: int, product_name: ProductsDetails = Body(...)):
     """, (product_name.name, product_name.price, product_name.stock_quantity, product_name.category, product_id))
     connection.commit()
     connection.close()
+
+
+@app.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_products(product_id: int):
+    if product_id < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Product id is invalid"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    delete from Products
+    where id = ?
+    """, (product_id,))
+    connection.commit()
+    connection.close()
