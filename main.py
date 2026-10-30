@@ -318,6 +318,13 @@ def get_product_by_name(product_name: str):
             status_code=404,
             detail="Not found! Product name does not exist"
         )
+    return{
+        "product id": product_found[0],
+        "product name": product_found[1],
+        "product price": product_found[2],
+        "product stock quantity": product_found[3],
+        "product category": product_found[4]
+    }
 
 
 # Filter products by category.
