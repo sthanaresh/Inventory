@@ -313,3 +313,27 @@ def get_product_by_category(category_name: str):
             detail="Bad Request! Category does not exist"
         )
     connection.close()
+
+
+# increase stock quantity
+@app.put("/products/increase-stock/", status_code=status.HTTP_200_OK)
+def increase_stock(product_id: int, quantity_to_add: int):
+    if not product_id or not quantity_to_add or product_id <= 0 or quantity_to_add <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Enter valid data"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    UPDATE Products
+    SET stock_quantity = stock_quantity + ?
+    WHERE id = ?
+    """, (quantity_to_add, product_id))
+    if cursor.rowcount == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Product id not found "
+        )
+    connection.commit()
+    connection.close()
