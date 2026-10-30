@@ -212,3 +212,41 @@ def create_products(product_name: ProductsDetails):
                     product_name.name))
     connection.commit()
     connection.close()
+
+@app.get("/products/", status_code=status.HTTP_200_OK)
+def get_all_products():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+        select * from Products        
+        """)
+    connection.close()
+
+
+@app.put("/products/{product_id}", status_code=status.HTTP_200_OK)
+def update_products(product_id: int, product_name: ProductsDetails = Body(...)):
+    if product_id < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Product id is invalid"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    SELECT *
+    FROM Products
+    WHERE id = ?
+    """, (product_id,))
+    product_found = cursor.fetchone()
+    if not product_found:
+        raise HTTPException(
+            status_code=404,
+            detail="Not found! Product id does not exist"
+        )
+    cursor.execute("""
+    UPDATE Products
+    SET Name=?, price=?, stock_quantity=?, category=?
+    where id=?
+    """, (product_name.name, product_name.price, product_name.stock_quantity, product_name.category, product_id))
+    connection.commit()
+    connection.close()
