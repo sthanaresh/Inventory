@@ -361,3 +361,37 @@ def decrease_stock(product_id: int, quantity_to_decrease: int):
             detail="Product not found or insufficient stock")
     connection.commit()
     connection.close()
+
+
+# Find products with low stock.
+@app.get("/products/low-stock/items", status_code=status.HTTP_200_OK)
+def get_product_low_stock():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    SELECT * from Products
+    where stock_quantity <=5
+    """)
+    product_low_stock = cursor.fetchall()
+    connection.close()
+    if not product_low_stock:
+        raise HTTPException(
+            status_code=404,
+            detail="No low-stock products found"
+        )
+    products = []
+
+    for product in product_low_stock:
+        products.append({
+            "product_id": product[0],
+            "product_name": product[1],
+            "price": product[2],
+            "stock_quantity": product[3],
+            "category": product[4]
+        })
+
+    return {
+        "message": "Low-stock products retrieved successfully",
+        "total_products": len(products),
+        "products": products
+    }
