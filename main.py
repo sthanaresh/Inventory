@@ -337,3 +337,27 @@ def increase_stock(product_id: int, quantity_to_add: int):
         )
     connection.commit()
     connection.close()
+
+
+# decrease stock quantity
+@app.put("/products/decrease-stock/", status_code=status.HTTP_200_OK)
+def decrease_stock(product_id: int, quantity_to_decrease: int):
+    if not product_id or not quantity_to_decrease or product_id <= 0 or quantity_to_decrease <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Enter valid data"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    UPDATE Products
+    SET stock_quantity = stock_quantity - ?
+    WHERE id = ?
+    AND stock_quantity >= ?    
+    """, (quantity_to_decrease, product_id, quantity_to_decrease))
+    if cursor.rowcount == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found or insufficient stock")
+    connection.commit()
+    connection.close()
