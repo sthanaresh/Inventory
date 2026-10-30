@@ -267,3 +267,25 @@ def delete_products(product_id: int):
     """, (product_id,))
     connection.commit()
     connection.close()
+
+# Search products by name
+@app.get("/products/{product_name}", status_code=status.HTTP_200_OK)
+def get_product_by_name(product_name: str):
+    if not product_name or not product_name.strip() or not re.fullmatch(r"[a-zA-Z\s-]+", product_name):
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request!"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    SELECT *
+    FROM Products
+    WHERE LOWER(name) = LOWER(?)
+    """, (product_name,))
+    product_found = cursor.fetchone()
+    if not product_found:
+        raise HTTPException(
+            status_code=404,
+            detail="Not found! Product name does not exist"
+        )
