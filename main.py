@@ -138,7 +138,11 @@ def getCategory_by_id(category_id: int):
             detail="Category does not exist"
         )
     connection.close()
-    return category
+    return {
+        "category id": category[0],
+        "category name": category[1]
+    }
+
 
 @app.put("/categories/{category_id}",status_code=status.HTTP_200_OK)
 def update_category(category_id: int, category_name: str = Body(...)):
