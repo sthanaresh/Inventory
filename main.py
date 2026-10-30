@@ -289,3 +289,27 @@ def get_product_by_name(product_name: str):
             status_code=404,
             detail="Not found! Product name does not exist"
         )
+
+
+# Filter products by category.
+@app.get("/products/{category_name}/", status_code=status.HTTP_200_OK)
+def get_product_by_category(category_name: str):
+    if not category_name or not category_name.strip() or not re.fullmatch(r"[a-zA-Z\s-]+", category_name):
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request!"
+        )
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+    SELECT *
+    FROM Products
+    WHERE LOWER(category) = LOWER(?)
+    """, (category_name,))
+    product_by_category = cursor.fetchall()
+    if not product_by_category:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad Request! Category does not exist"
+        )
+    connection.close()
