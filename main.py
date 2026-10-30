@@ -349,6 +349,20 @@ def get_product_by_category(category_name: str):
             detail="Bad Request! Category does not exist"
         )
     connection.close()
+    category_total=[]
+    for category in product_by_category:
+        category_total.append({
+            "product id": category[0],
+            "product name": category[1],
+            "product price": category[2],
+            "product stock quantity": category[3],
+            "product category": category[4]
+        })
+    return {
+        "message":"All products with category retrieved successfully",
+        "total_category": len(category_total),
+        "categories": category_total
+    }
 
 
 # increase stock quantity
