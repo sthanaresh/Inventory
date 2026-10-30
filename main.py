@@ -236,6 +236,20 @@ def get_all_products():
         select * from Products        
         """)
     connection.close()
+    products_list = []
+    for product in all_products:
+        products_list.append({
+            "product id": product[0],
+            "product name": product[1],
+            "product price": product[2],
+            "product stock quantity": product[3],
+            "product category": product[4]
+        })
+    return {
+        "message":"All products retrieved successfully",
+        "total_products": len(products_list),
+        "products": products_list
+    }
 
 
 @app.put("/products/{product_id}", status_code=status.HTTP_200_OK)
