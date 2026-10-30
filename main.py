@@ -105,7 +105,18 @@ def getAll_categories():
     """)
     categories = cursor.fetchall()
     connection.close()
-    return categories
+    categories_all = []
+    for category in categories:
+        categories_all.append({
+            "category_id": category[0],
+            "category_name": category[1],
+        })
+    return {
+        "message": "All categories retrieved successfully",
+        "total categories": len(categories_all),
+        "categories": categories_all
+    }
+
 
 @app.get("/categories/{category_id}")
 def getCategory_by_id(category_id: int):
