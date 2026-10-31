@@ -2,9 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.categories import router as categories_router
 from routers.products import router as products_router
-app = FastAPI()
-app.include_router(categories_router)
-app.include_router(products_router)
+app = FastAPI(title="Inventory Management API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -15,3 +13,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+app.include_router(categories_router)
+app.include_router(products_router)
+
