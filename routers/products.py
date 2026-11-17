@@ -3,7 +3,8 @@ import sqlite3
 from fastapi import HTTPException, status, Body, APIRouter
 from pydantic import BaseModel, Field
 from database import get_db_connection
-from repositories.product_repository import create_products as create_product_db
+from repositories.product_repository import create_products as create_product_db, get_all_products
+
 router = APIRouter(tags=["Products"])
 
 class ProductsDetails(BaseModel):
@@ -66,25 +67,18 @@ def create_products(product_name: CreateProductRequest):
 
 
 @router.get("/products/", status_code=status.HTTP_200_OK)
-def get_all_products()->list[ProductResponse]:
-    connection = get_db_connection()
-    connection.row_factory=sqlite3.Row
-    cursor = connection.cursor()
-    cursor.execute("""
-        select * from Products        
-        """)
-    all_products = cursor.fetchall()
-    cursor.close()
-    connection.close()
+def get_all_products_route()->list[ProductResponse]:
+    result_all_product=get_all_products()
     products_list = []
-    for product in all_products:
+    for product in result_all_product:
         products_list.append(ProductResponse(
             name=product["name"],
             price=product["price"],
             stock_quantity=product["stock_quantity"],
-            available=product["stock_quantity"]>0,
+            available=product["stock_quantity"] > 0,
         ))
     return products_list
+
 @router.put("/products/{product_id}", status_code=status.HTTP_200_OK)
 def update_products(product_id: int, product_name: ProductsDetails = Body(...)):
     if product_id < 1:
