@@ -3,6 +3,7 @@ import sqlite3
 from fastapi import HTTPException, status, Body, APIRouter
 from pydantic import BaseModel, Field
 from database import get_db_connection
+from repositories.product_repository import create_products as create_product_db
 router = APIRouter(tags=["Products"])
 
 class ProductsDetails(BaseModel):
@@ -51,30 +52,17 @@ def create_products(product_name: CreateProductRequest):
             status_code=400,
             detail="Bad Request! Product details are required"
         )
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    SELECT *
-    FROM Category
-    WHERE name =?
-    """, (product_name.category,))
-    category_found = cursor.fetchone()
-    if not category_found:
+    result=create_product_db(product_name)
+    if result is None:
         raise HTTPException(
-            status_code=400,
-            detail="Bad Request! Category does not exist"
-
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Category does not exist"
         )
-    cursor.execute("""
-    INSERT INTO Products (Category, Stock_Quantity, Price, Name)
-                     VALUES (?, ?, ?, ?)""",
-                   (product_name.category,
-                    product_name.stock_quantity,
-                    product_name.price,
-                    product_name.name))
-    product_details=cursor.fetchall()
-    connection.commit()
-    connection.close()
+    return {
+        "message": "Product created successfully",
+        "product": result
+    }
+
 
 
 @router.get("/products/", status_code=status.HTTP_200_OK)
