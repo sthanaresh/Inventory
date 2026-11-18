@@ -3,7 +3,7 @@ import sqlite3
 from fastapi import HTTPException, status, Body, APIRouter
 from pydantic import BaseModel, Field
 from database import get_db_connection
-from repositories.product_repository import create_products as create_product_db, get_all_products, update_products, delete_products
+from repositories.product_repository import create_products as create_product_db, get_all_products, update_products, delete_products,get_product_by_name
 
 router = APIRouter(tags=["Products"])
 
@@ -109,21 +109,16 @@ def delete_products_route(product_id: int):
             detail=str(e)
         )
 # Search products by name
+
 @router.get("/products/{product_name}", status_code=status.HTTP_200_OK)
-def get_product_by_name(product_name: str)->ProductsDetails:
+def get_product_by_name_route(product_name: str) -> ProductsDetails:
+
     if not product_name or not product_name.strip() or not re.fullmatch(r"[a-zA-Z\s-]+", product_name):
         raise HTTPException(
             status_code=400,
             detail="Bad Request!"
         )
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    SELECT *
-    FROM Products
-    WHERE LOWER(name) = LOWER(?)
-    """, (product_name,))
-    product_found = cursor.fetchone()
+    product_found = get_product_by_name(product_name)
     if not product_found:
         raise HTTPException(
             status_code=404,
