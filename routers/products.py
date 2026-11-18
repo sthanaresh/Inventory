@@ -3,7 +3,8 @@ import sqlite3
 from fastapi import HTTPException, status, Body, APIRouter
 from pydantic import BaseModel, Field
 from database import get_db_connection
-from repositories.product_repository import create_products as create_product_db, get_all_products, update_products, delete_products,get_product_by_name
+from repositories.product_repository import (create_products as create_product_db,
+                get_all_products, update_products, delete_products,get_product_by_name, get_product_by_category)
 
 router = APIRouter(tags=["Products"])
 
@@ -133,28 +134,21 @@ def get_product_by_name_route(product_name: str) -> ProductsDetails:
     )
 # Filter products by category.
 @router.get("/products/{category_name}/", status_code=status.HTTP_200_OK)
-def get_product_by_category(category_name: str)->list[ProductByCategoryResponse]:
+@router.get("/products/category/{category_name}", status_code=status.HTTP_200_OK)
+def get_product_by_category_route(category_name: str) -> list[ProductByCategoryResponse]:
+
     if not category_name or not category_name.strip() or not re.fullmatch(r"[a-zA-Z\s-]+", category_name):
         raise HTTPException(
             status_code=400,
             detail="Bad Request!"
         )
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    SELECT *
-    FROM Products
-    WHERE LOWER(category) = LOWER(?)
-    """, (category_name,))
-    product_by_category = cursor.fetchall()
+    product_by_category = get_product_by_category(category_name)
     if not product_by_category:
         raise HTTPException(
             status_code=400,
             detail="Bad Request! Category does not exist"
         )
-    connection.close()
-
-    return[
+    return [
         ProductByCategoryResponse(
             name=row[1],
             price=row[2],
