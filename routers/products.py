@@ -1,12 +1,15 @@
 import re
-import sqlite3
+
 from fastapi import HTTPException, status, Body, APIRouter
 from pydantic import BaseModel, Field
-from database import get_db_connection
+
 from repositories.product_repository import (create_products as create_product_db,
-                get_all_products, update_products, delete_products,get_product_by_name, get_product_by_category)
+                                             get_all_products, update_products, delete_products, get_product_by_name,
+                                             get_product_by_category,
+                                             increase_stock, decrease_stock, get_product_low_stock)
 
 router = APIRouter(tags=["Products"])
+
 
 class ProductsDetails(BaseModel):
     name: str = Field(min_length=1)
@@ -15,32 +18,37 @@ class ProductsDetails(BaseModel):
     stock_quantity: int
     category: str = Field(min_length=1)
 
+
 class CreateProductRequest(BaseModel):
     name: str = Field(min_length=1)
     price: float
     stock_quantity: int
     category: str = Field(min_length=1)
 
+
 class ProductResponse(BaseModel):
     name: str = Field(min_length=1)
     price: float
     stock_quantity: int
-    available:bool
+    available: bool
 
 
 class UpdateProductResponse(BaseModel):
     name: str
     category: str
 
+
 class ProductByCategoryResponse(BaseModel):
     name: str
     price: float
     stock_quantity: int
 
+
 class LowStockResponse(BaseModel):
     message: str
     total_products: int
-    products:list
+    products: list
+
 
 @router.post("/products/create", status_code=status.HTTP_201_CREATED)
 def create_products(product_name: CreateProductRequest):
@@ -54,7 +62,7 @@ def create_products(product_name: CreateProductRequest):
             status_code=400,
             detail="Bad Request! Product details are required"
         )
-    result=create_product_db(product_name)
+    result = create_product_db(product_name)
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -66,10 +74,9 @@ def create_products(product_name: CreateProductRequest):
     }
 
 
-
 @router.get("/products/", status_code=status.HTTP_200_OK)
-def get_all_products_route()->list[ProductResponse]:
-    result_all_product=get_all_products()
+def get_all_products_route() -> list[ProductResponse]:
+    result_all_product = get_all_products()
     products_list = []
     for product in result_all_product:
         products_list.append(ProductResponse(
@@ -79,6 +86,7 @@ def get_all_products_route()->list[ProductResponse]:
             available=product["stock_quantity"] > 0,
         ))
     return products_list
+
 
 @router.put("/products/{product_id}", status_code=status.HTTP_200_OK)
 def update_products_route(product_id: int, product_name: ProductsDetails = Body(...)):
@@ -92,8 +100,9 @@ def update_products_route(product_id: int, product_name: ProductsDetails = Body(
     except Exception as e:
         raise HTTPException(
             status_code=404,
-            detail= str(e)
+            detail=str(e)
         )
+
 
 @router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_products_route(product_id: int):
@@ -109,11 +118,11 @@ def delete_products_route(product_id: int):
             status_code=404,
             detail=str(e)
         )
-# Search products by name
 
+
+# Search products by name
 @router.get("/products/{product_name}", status_code=status.HTTP_200_OK)
 def get_product_by_name_route(product_name: str) -> ProductsDetails:
-
     if not product_name or not product_name.strip() or not re.fullmatch(r"[a-zA-Z\s-]+", product_name):
         raise HTTPException(
             status_code=400,
@@ -132,11 +141,11 @@ def get_product_by_name_route(product_name: str) -> ProductsDetails:
         stock_quantity=product_found[3],
         category=product_found[4],
     )
+
+
 # Filter products by category.
-@router.get("/products/{category_name}/", status_code=status.HTTP_200_OK)
 @router.get("/products/category/{category_name}", status_code=status.HTTP_200_OK)
 def get_product_by_category_route(category_name: str) -> list[ProductByCategoryResponse]:
-
     if not category_name or not category_name.strip() or not re.fullmatch(r"[a-zA-Z\s-]+", category_name):
         raise HTTPException(
             status_code=400,
@@ -156,75 +165,70 @@ def get_product_by_category_route(category_name: str) -> list[ProductByCategoryR
         )
         for row in product_by_category
     ]
+
+
 # increase stock quantity
 @router.put("/products/increase-stock/", status_code=status.HTTP_200_OK)
-def increase_stock(product_id: int, quantity_to_add: int):
+def increase_stock_route(product_id: int, quantity_to_add: int):
     if product_id < 1 or quantity_to_add < 1:
         raise HTTPException(
             status_code=400,
             detail="Bad Request! Enter valid data"
         )
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    UPDATE Products
-    SET stock_quantity = stock_quantity + ?
-    WHERE id = ?
-    """, (quantity_to_add, product_id))
-    if cursor.rowcount == 0:
+
+    result = increase_stock(product_id, quantity_to_add)
+
+    if not result:
         raise HTTPException(
             status_code=404,
-            detail="Product id not found "
+            detail="Product id not found"
         )
-    connection.commit()
-    connection.close()
+
+    return {"message": "Stock increased successfully"}
+
+
 # decrease stock quantity
 @router.put("/products/decrease-stock/", status_code=status.HTTP_200_OK)
-def decrease_stock(product_id: int, quantity_to_decrease: int):
-    if not product_id or not quantity_to_decrease or product_id <= 0 or quantity_to_decrease <= 0:
+def decrease_stock_route(product_id: int, quantity_to_decrease: int):
+    if product_id <= 0 or quantity_to_decrease <= 0:
         raise HTTPException(
             status_code=400,
             detail="Bad Request! Enter valid data"
         )
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    UPDATE Products
-    SET stock_quantity = stock_quantity - ?
-    WHERE id = ?
-    AND stock_quantity >= ?    
-    """, (quantity_to_decrease, product_id, quantity_to_decrease))
-    if cursor.rowcount == 0:
+
+    result = decrease_stock(product_id, quantity_to_decrease)
+
+    if not result:
         raise HTTPException(
             status_code=404,
-            detail="Product not found or insufficient stock")
-    connection.commit()
-    connection.close()
+            detail="Product not found or insufficient stock"
+        )
+
+    return {"message": "Stock decreased successfully"}
+
+
 # Find products with low stock.
 @router.get("/products/low-stock/items", status_code=status.HTTP_200_OK)
-def get_product_low_stock()->LowStockResponse:
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    SELECT * from Products
-    where stock_quantity <=5
-    """)
-    product_low_stock = cursor.fetchall()
-    connection.close()
+def get_product_low_stock_route() -> LowStockResponse:
+    product_low_stock = get_product_low_stock()
+
     if not product_low_stock:
         raise HTTPException(
             status_code=404,
             detail="No low-stock products found"
         )
+
     products = []
+
     for product in product_low_stock:
         products.append({
-            "product_name": product[1],
-            "stock_quantity": product[3],
-            "category": product[4]
+            "product_name": product["name"],
+            "stock_quantity": product["stock_quantity"],
+            "category": product["category"]
         })
-    return LowStockResponse (
+
+    return LowStockResponse(
         message="Low-stock products retrieved successfully",
-        total_products= len(products),
-        products= products
+        total_products=len(products),
+        products=products
     )
