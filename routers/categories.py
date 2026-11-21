@@ -1,7 +1,7 @@
 from fastapi import HTTPException, APIRouter, status, Body
 
 from database import get_db_connection
-from repositories.category_repository import create_category
+from repositories.category_repository import create_category, get_all_categories
 
 router = APIRouter(tags=["Categories"])
 
@@ -24,21 +24,14 @@ def create_categories_route(category_name: str):
     }
 
 
-@router.get("/categories")
-def getAll_categories():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    SELECT *
-    FROM Category
-    """)
-    categories = cursor.fetchall()
-    connection.close()
+@router.get("/categories", status_code=status.HTTP_200_OK)
+def get_all_categories_route():
+    categories = get_all_categories()
     categories_all = []
     for category in categories:
         categories_all.append({
-            "id": category[0],
-            "name": category[1],
+            "id": category["id"],
+            "name": category["name"],
         })
     return categories_all
 
