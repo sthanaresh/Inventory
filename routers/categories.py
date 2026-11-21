@@ -1,7 +1,7 @@
 from fastapi import HTTPException, APIRouter, status, Body
 
 from database import get_db_connection
-from repositories.category_repository import create_category, get_all_categories
+from repositories.category_repository import create_category, get_all_categories, get_category_by_id
 
 router = APIRouter(tags=["Categories"])
 
@@ -36,29 +36,22 @@ def get_all_categories_route():
     return categories_all
 
 
-@router.get("/categories/{category_id}")
-def getCategory_by_id(category_id: int):
+@router.get("/categories/{category_id}", status_code=status.HTTP_200_OK)
+def get_category_by_id_route(category_id: int):
     if category_id < 1:
         raise HTTPException(
             status_code=400,
-            detail="Bad Request! Category id is required")
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    SELECT *
-    FROM Category
-    WHERE id = ?
-    """, (category_id,))
-    category = cursor.fetchone()
+            detail="Bad Request! Category id is required"
+        )
+    category = get_category_by_id(category_id)
     if not category:
         raise HTTPException(
             status_code=404,
             detail="Category does not exist"
         )
-    connection.close()
     return {
-        "category id": category[0],
-        "category name": category[1]
+        "category id": category["id"],
+        "category name": category["name"]
     }
 
 
