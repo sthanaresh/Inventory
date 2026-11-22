@@ -1,7 +1,7 @@
 from fastapi import HTTPException, APIRouter, status, Body
 
-from database import get_db_connection
-from repositories.category_repository import create_category, get_all_categories, get_category_by_id, update_category
+from repositories.category_repository import (create_category, get_all_categories, get_category_by_id, update_category,
+                                              delete_category_by_id)
 
 router = APIRouter(tags=["Categories"])
 
@@ -84,17 +84,16 @@ def update_category_route(category_id: int, category_name: str = Body(...)):
 
 
 @router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_category(category_id: int):
+def delete_category_route(category_id: int):
     if category_id < 1:
         raise HTTPException(
             status_code=400,
             detail="Bad Request! Category id is not valid"
         )
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    delete from Category where id = ?
-    """, (category_id,))
-    connection.commit()
-    connection.close()
+    result = delete_category_by_id(category_id)
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Category does not exist"
+        )
     return None
