@@ -1,7 +1,7 @@
 from fastapi import HTTPException, APIRouter, status, Body
 
 from database import get_db_connection
-from repositories.category_repository import create_category, get_all_categories, get_category_by_id
+from repositories.category_repository import create_category, get_all_categories, get_category_by_id, update_category
 
 router = APIRouter(tags=["Categories"])
 
@@ -56,35 +56,31 @@ def get_category_by_id_route(category_id: int):
 
 
 @router.put("/categories/{category_id}", status_code=status.HTTP_200_OK)
-def update_category(category_id: int, category_name: str = Body(...)):
-    print(f"User input:{category_name}")
+def update_category_route(category_id: int, category_name: str = Body(...)):
     if category_id < 1:
         raise HTTPException(
             status_code=400,
             detail="Bad Request! Category id is required"
         )
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("""
-    select * from Category where id = ?
-    """, (category_id,))
-    category_found = cursor.fetchone()
-    print(category_found)
-    if not category_found:
+    if not category_name.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Category name is required"
+        )
+    result = update_category(category_id, category_name.strip())
+    if result == "not_found":
         raise HTTPException(
             status_code=404,
             detail="Not found! Category does not exist"
         )
-    cursor.execute("""
-                   update Category
-                   set Name=?
-                   where id=?               
-                   """, (category_name, category_id))
-    updated_category = cursor.fetchone()
-    connection.commit()
-    print(update_category)
-    connection.commit()
-    connection.close()
+    if result == "already_exists":
+        raise HTTPException(
+            status_code=400,
+            detail="Category name already exists"
+        )
+    return {
+        "message": f"Category updated successfully to {category_name.strip()}"
+    }
 
 
 @router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
