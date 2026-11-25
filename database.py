@@ -1,5 +1,7 @@
 import sqlite3
 
+from settings import DATABASE_PATH, DATABASE_TIMEOUT
+
 
 def create_database():
     connection = get_db_connection()
@@ -25,4 +27,7 @@ def create_database():
 
 
 def get_db_connection():
-    return sqlite3.connect('/home/naresh/Inventory/InventoryManagement.db')
+    return sqlite3.connect(
+        str(DATABASE_PATH),
+        timeout=DATABASE_TIMEOUT
+    )
