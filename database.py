@@ -1,6 +1,6 @@
 import sqlite3
 
-from settings import DATABASE_PATH, DATABASE_TIMEOUT
+from settings import DATABASE_PATH
 
 
 def create_database():
@@ -28,6 +28,5 @@ def create_database():
 
 def get_db_connection():
     return sqlite3.connect(
-        str(DATABASE_PATH),
-        timeout=DATABASE_TIMEOUT
+        str(DATABASE_PATH)
     )
