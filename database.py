@@ -1,6 +1,6 @@
 import sqlite3
 
-from settings import DATABASE_PATH
+from config import settings
 
 
 def create_database():
@@ -27,6 +27,4 @@ def create_database():
 
 
 def get_db_connection():
-    return sqlite3.connect(
-        str(DATABASE_PATH)
-    )
+    return sqlite3.connect(str(settings.database_path))
