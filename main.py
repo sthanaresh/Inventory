@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from config import settings
 from routers import products, categories
 
-app = FastAPI(title="Inventory Management API", version="1.0.0")
+app = FastAPI(title=settings.app_name, version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],
